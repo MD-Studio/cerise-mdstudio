@@ -19,14 +19,16 @@ job = srv.create_job('decompose_include')
 job.set_workflow('md_workflow.cwl')
 job.add_input_file('protein_pdb', 'protein.pdb')
 job.add_input_file('protein_top', 'protein.top')
-job.add_input_file('protein_itp', 'ref_conf_1-posre.itp')
 job.add_input_file('ligand_pdb', 'compound.pdb')
 job.add_input_file('ligand_top', 'compound_ref.itp')
-job.add_input_file('ligand_itp', 'compound_ref-posre.itp')
-job.add_input_file('include_itp', 'attype.itp')
-job.set_input('force_field', 'amber99SB')
 job.set_input('sim_time', 0.001)
 job.set_input('residues', "28,29,65,73")
+job.set_input('force_field', 'amber99SB')
+
+# Secondary files
+job.add_secondary_file('protein_top', 'ref_conf_1-posre.itp')
+job.add_secondary_file('protein_top', 'attype.itp')
+job.add_secondary_file('ligand_top', 'compound_ref-posre.itp')
 
 # Start it
 print("Running job")
@@ -58,8 +60,8 @@ while job.is_running():
 
 # Process output
 if job.state == 'Success':
-    job.outputs['trajectory'].save_as('CYP19A1vs_BHC89.trr')
-    job.outputs['energy'].save_as('CYP19A1vs_BHC89.edr')
+    job.outputs['trajectory'].save_as('protein.trr')
+    job.outputs['energy'].save_as('protein.edr')
     job.outputs['energy_dataframe'].save_as('energy.ene')
     job.outputs['decompose_dataframe'].save_as('decompose.ene')
 else:

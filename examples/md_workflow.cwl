@@ -3,11 +3,8 @@ class: Workflow
 inputs:
   protein_pdb: File
   protein_top: File
-  protein_itp: File
   ligand_pdb: File
   ligand_top: File
-  ligand_itp: File
-  include_itp: File
   force_field: string
   sim_time: double
   residues: string
@@ -65,11 +62,8 @@ steps:
     in:
       protein_pdb: protein_pdb
       protein_top: protein_top
-      protein_itp: protein_itp
       ligand_pdb: ligand_pdb
       ligand_top: ligand_top
-      ligand_itp: ligand_itp
-      include_itp: include_itp
       force_field: force_field
       sim_time: sim_time
     out: [gromitout,gromiterr,gromacslog_step9,trajectory, energy,
@@ -86,8 +80,7 @@ steps:
     in:
       res: residues
       ligand_top: ligand_top
-      ligand_itp: ligand_itp
-      include_itp: include_itp
+      protein_top: protein_top
       gro:
         source: gromit/gro
       ndx:
