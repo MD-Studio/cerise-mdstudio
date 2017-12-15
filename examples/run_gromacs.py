@@ -1,12 +1,11 @@
 from __future__ import print_function
 
 from time import sleep
+import cerise_client.service as cc
 import os
 
-import cerise_client.service as cc
-
-
 # Create a new service for user myuser, with given cluster credentials
+env = os.environ
 srv = cc.require_managed_service(
         'cerise-mdstudio-das5-myuser', 29593,
         'mdstudio/cerise-mdstudio-das5:develop',
@@ -16,17 +15,20 @@ cc.start_managed_service(srv)
 
 # Create a job and set workflow and inputs
 print("Creating job")
-job = srv.create_job('example_job')
+job = srv.create_job('decompose_include')
 job.set_workflow('md_workflow.cwl')
-job.add_input_file('protein_pdb', 'CYP19A1vs.pdb')
-job.add_input_file('protein_top', 'CYP19A1vs.top')
-job.add_input_file('protein_itp', 'CYP19A1vs-posre.itp')
-job.add_input_file('ligand_pdb', 'BHC89.pdb')
-job.add_input_file('ligand_top', 'BHC89.itp')
-job.add_input_file('ligand_itp', 'BHC89-posre.itp')
-job.add_input_file('include_itp', 'attype.itp')
-job.set_input('force_field', 'amber99SB')
+job.add_input_file('protein_pdb', 'protein.pdb')
+job.add_input_file('protein_top', 'protein.top')
+job.add_input_file('ligand_pdb', 'compound.pdb')
+job.add_input_file('ligand_top', 'compound_ref.itp')
 job.set_input('sim_time', 0.001)
+job.set_input('residues', "28,29,65,73")
+job.set_input('force_field', 'amber99SB')
+
+# Secondary files
+job.add_secondary_file('protein_top', 'ref_conf_1-posre.itp')
+job.add_secondary_file('protein_top', 'attype.itp')
+job.add_secondary_file('ligand_top', 'compound_ref-posre.itp')
 
 # Start it
 print("Running job")
@@ -58,13 +60,13 @@ while job.is_running():
 
 # Process output
 if job.state == 'Success':
-    job.outputs['trajectory'].save_as('CYP19A1vs_BHC89.trr')
-    job.outputs['energy'].save_as('energy.out')
+    job.outputs['trajectory'].save_as('protein.trr')
+    job.outputs['energy'].save_as('protein.edr')
+    job.outputs['energy_dataframe'].save_as('energy.ene')
+    job.outputs['decompose_dataframe'].save_as('decompose.ene')
 else:
     print('There was an error: ' + job.state)
     print(job.log)
-    job.outputs['energyout'].save_as('energy.out')
-    job.outputs['energyerr'].save_as('energy.err')
 
 # Clean up the job and the service
 srv.destroy_job(job)
