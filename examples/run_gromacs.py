@@ -1,3 +1,4 @@
+
 from __future__ import print_function
 
 from time import sleep
@@ -7,23 +8,23 @@ import os
 # Create a new service for user myuser, with given cluster credentials
 env = os.environ
 srv = cc.require_managed_service(
-        'cerise-mdstudio-das5-myuser', 29593,
-        'mdstudio/cerise-mdstudio-das5:develop',
-        os.environ['CERISE_DAS5_USERNAME'],
-        os.environ['CERISE_DAS5_PASSWORD'])
+    'cerise-mdstudio-das5-myuser', 29593,
+    'mdstudio/cerise-mdstudio-das5:develop',
+    os.environ['CERISE_DAS5_USERNAME'],
+    os.environ['CERISE_DAS5_PASSWORD'])
 cc.start_managed_service(srv)
 
 # Create a job and set workflow and inputs
 print("Creating job")
 job = srv.create_job('decompose_include')
-job.set_workflow('md_workflow.cwl')
+job.set_workflow('lie_md_workflow.cwl')
 job.add_input_file('protein_pdb', 'protein.pdb')
 job.add_input_file('protein_top', 'protein.top')
 job.add_input_file('ligand_pdb', 'compound.pdb')
 job.add_input_file('ligand_top', 'compound_ref.itp')
 job.set_input('sim_time', 0.001)
-job.set_input('residues', "28,29,65,73")
-job.set_input('force_field', 'amber99SB')
+job.set_input('residues', [28, 29, 65, 73])
+job.set_input('forcefield', 'amber99SB')
 
 # Secondary files
 job.add_secondary_file('protein_top', 'ref_conf_1-posre.itp')
@@ -60,10 +61,12 @@ while job.is_running():
 
 # Process output
 if job.state == 'Success':
-    job.outputs['trajectory'].save_as('protein.trr')
-    job.outputs['energy'].save_as('protein.edr')
-    job.outputs['energy_dataframe'].save_as('energy.ene')
-    job.outputs['decompose_dataframe'].save_as('decompose.ene')
+    job.outputs['energy_solvent_ligand'].save_as('ligand.edr')
+    job.outputs['energy_protein_ligand'].save_as('protein.edr')
+    job.outputs['energy_dataframe_solvent_ligand'].save_as(
+        'energy_solvent_ligand.ene')
+    job.outputs['energy_dataframe_protein_ligand'].save_as(
+        'energy_protein_ligand.ene')
 else:
     print('There was an error: ' + job.state)
     print(job.log)
