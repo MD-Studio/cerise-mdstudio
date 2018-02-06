@@ -12,16 +12,20 @@ srv = cc.require_managed_service(
     'mdstudio/cerise-mdstudio-das5:develop',
     os.environ['CERISE_DAS5_USERNAME'],
     os.environ['CERISE_DAS5_PASSWORD'])
+
 cc.start_managed_service(srv)
+
+sleep(10)
+print(srv.get_log())
 
 # Create a job and set workflow and inputs
 print("Creating job")
 job = srv.create_job('decompose_include')
-job.set_workflow('lie_md_workflow.cwl')
-job.add_input_file('protein_pdb', 'protein.pdb')
+job.set_workflow('protein_ligand.cwl')
+job.add_input_file('protein_file', 'protein.pdb')
 job.add_input_file('protein_top', 'protein.top')
-job.add_input_file('ligand_pdb', 'compound.pdb')
-job.add_input_file('ligand_top', 'compound_ref.itp')
+job.add_input_file('ligand_file', 'compound.pdb')
+job.add_input_file('topology_file', 'compound_ref.itp')
 job.set_input('sim_time', 0.001)
 job.set_input('residues', [28, 29, 65, 73])
 job.set_input('forcefield', 'amber99SB')
@@ -29,7 +33,7 @@ job.set_input('forcefield', 'amber99SB')
 # Secondary files
 job.add_secondary_file('protein_top', 'ref_conf_1-posre.itp')
 job.add_secondary_file('protein_top', 'attype.itp')
-job.add_secondary_file('ligand_top', 'compound_ref-posre.itp')
+job.add_secondary_file('topology_file', 'compound_ref-posre.itp')
 
 # Start it
 print("Running job")
@@ -60,13 +64,33 @@ while job.is_running():
     sleep(3)
 
 # Process output
+# Process output
 if job.state == 'Success':
-    job.outputs['energy_solvent_ligand'].save_as('ligand.edr')
-    job.outputs['energy_protein_ligand'].save_as('protein.edr')
-    job.outputs['energy_dataframe_solvent_ligand'].save_as(
-        'energy_solvent_ligand.ene')
-    job.outputs['energy_dataframe_protein_ligand'].save_as(
-        'energy_protein_ligand.ene')
+    file_formats = {
+        "gromitout": "{}.out",
+        "gromiterr": "{}.err",
+        "gromacslog2": "{}.out",
+        "gromacslog3": "{}.out",
+        "gromacslog4": "{}.out",
+        "gromacslog5": "{}.out",
+        "gromacslog6": "{}.out",
+        "gromacslog7": "{}.out",
+        "gromacslog8": "{}.out",
+        "gromacslog9": "{}.out",
+        "energy":  "{}.edr",
+        "energy_dataframe": "{}.ene",
+        "energyout": "{}.out",
+        "energyerr": "{}.err",
+        "decompose_dataframe": "{}.ene",
+        "decompose_err": "{}.err",
+        "decompose_out": "{}.out"}
+
+    # Save all data about the simulation
+    outputs = job.outputs
+    for key, fmt in file_formats.items():
+        if key in outputs:
+            file_object = outputs[key]
+            file_object.save_as(fmt.format(key))
 else:
     print('There was an error: ' + job.state)
     print(job.log)
