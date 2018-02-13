@@ -91,7 +91,7 @@ outputs:
   mdp:
     type: File
     outputSource: gromit/mdp
-  energy:
+  energy_edr:
     type: File
     outputSource: gromit/energy
   energy_dataframe:
@@ -145,7 +145,7 @@ steps:
   decompose:
     run: mdstudio/decompose.cwl
     in:
-      # secondary files
+      # secondary files are added automatically
       topology_file: topology_file
       protein_top: protein_top
       # position binded parameters 
