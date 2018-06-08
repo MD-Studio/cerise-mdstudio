@@ -1,0 +1,22 @@
+; Include forcefield parameters
+#include "oplsaa.ff/forcefield.itp"
+#include "Newatoms.itp"
+
+#include "Choline.itp"
+#include "oplsaa.ff/ions.itp"
+#include "Ara.itp"
+
+#include "Solute_TIP4P.itp"
+#include "oplsaa.ff/tip4p.itp"
+
+[ system ]
+; Name
+Choline-chloride / Arabinose in water
+
+[ molecules ]
+; Compound        #mols
+CHO               100
+CL                100
+ARA               100
+WAT                 1
+SOL                49

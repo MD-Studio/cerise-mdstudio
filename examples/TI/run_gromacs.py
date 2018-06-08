@@ -7,18 +7,18 @@ import os
 
 # Create a new service for user myuser, with given cluster credentials
 env = os.environ
-# srv = cc.require_managed_service(
-#     'scientist_das5', 29593,
-#     # 'mdstudio/cerise-mdstudio-das5:develop',
-#     'cerise-das5:test',
-#     os.environ['CERISE_DAS5_USERNAME'],
-#     os.environ['CERISE_DAS5_PASSWORD'])
-
 srv = cc.require_managed_service(
-    'scientist_binac', 29593,
-    'mdstudio/cerise-mdstudio-binac:develop',
-    os.environ['CERISE_BINAC_USERNAME'],
-    os.environ['CERISE_BINAC_PASSWORD'])
+    'scientist_das5', 29593,
+    # 'mdstudio/cerise-mdstudio-das5:develop',
+    'cerise-das5:test',
+    os.environ['CERISE_DAS5_USERNAME'],
+    os.environ['CERISE_DAS5_PASSWORD'])
+
+# srv = cc.require_managed_service(
+#     'scientist_binac', 29593,
+#     'mdstudio/cerise-mdstudio-binac:develop',
+#     os.environ['CERISE_BINAC_USERNAME'],
+#     os.environ['CERISE_BINAC_PASSWORD'])
 
 # srv = cc.require_managed_service(
 #     'scientist_gt', 29593,
@@ -32,15 +32,19 @@ cc.start_managed_service(srv)
 # Create a job and set workflow and inputs
 print("Creating job")
 job = srv.create_job('thermodynamic_int')
-job.set_workflow('protein_ligand.cwl')
-job.add_input_file('protein_file', 'protein.pdb')
-job.add_input_file('protein_top', 'protein.top')
-job.set_input('sim_time', 0.001)
+job.set_workflow('lambda_points.cwl')
 
+files = {
+    'min_mdp_file': 'data/em_steep_0.mdp',
+    'min_gro_file': 'data/start.gro',
+    'min_top_file': 'data/topo.top'}
+
+for key, file_path in files.items():
+    job.add_input_file(key, file_path)
+
+job.set_input('openmp_thread', 1)
 # Secondary files
-job.add_secondary_file('protein_top', 'ref_conf_1-posre.itp')
-job.add_secondary_file('protein_top', 'attype.itp')
-job.add_secondary_file('topology_file', 'compound_ref-posre.itp')
+# job.add_secondary_file('protein_top', 'ref_conf_1-posre.itp')
 
 # Start it
 print("Running job")
@@ -72,33 +76,18 @@ while job.is_running():
     sleep(3)
 
 # Process output
-# Process output
 if job.state == 'Success':
-    file_formats = {
-        "gromitout": "{}.out",
-        "gromiterr": "{}.err",
-        "gromacslog2": "{}.out",
-        "gromacslog3": "{}.out",
-        "gromacslog4": "{}.out",
-        "gromacslog5": "{}.out",
-        "gromacslog6": "{}.out",
-        "gromacslog7": "{}.out",
-        "gromacslog8": "{}.out",
-        "gromacslog9": "{}.out",
-        "energy_edr":  "{}.edr",
-        "energy_dataframe": "{}.ene",
-        "energyout": "{}.out",
-        "energyerr": "{}.err",
-        "decompose_dataframe": "{}.ene",
-        "decompose_err": "{}.err",
-        "decompose_out": "{}.out"}
+    print("good")
+    # file_formats = {
+    #     "decompose_err": "{}.err",
+    #     "decompose_out": "{}.out"}
 
-    # Save all data about the simulation
-    outputs = job.outputs
-    for key, fmt in file_formats.items():
-        if key in outputs:
-            file_object = outputs[key]
-            file_object.save_as(fmt.format(key))
+    # # Save all data about the simulation
+    # outputs = job.outputs
+    # for key, fmt in file_formats.items():
+    #     if key in outputs:
+    #         file_object = outputs[key]
+    #         file_object.save_as(fmt.format(key))
 else:
     print('There was an error: ' + job.state)
     print(job.log)
